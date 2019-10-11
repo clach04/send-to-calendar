@@ -51,7 +51,7 @@ function SendToCalendar(selection, tab) {
     // but can also include other info.
     var title = TrimURITo(tab.title + "\n", maxLength - url.length);
     var selection = TrimURITo(selection, (maxLength - url.length)/2 - title.length);
-    url += selection + "&ctext=" + title + selection;
+    url += selection + "&text=" + title + selection;
 	
     // Open the created url in a new tab
 	chrome.tabs.create({ "url": url}, function (tab) {});
