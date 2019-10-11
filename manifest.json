@@ -1,6 +1,6 @@
 {
   "name": "Send to Calendar",
-  "version": "0.20",
+  "version": "0.30",
   "description": "Send events to Google Calendar automagically from any webpage. No more re-typing! Select text, right click, and 'Send to Calendar.'",
   "icons": { "16": "icon16.png", "48": "icon48.png", "128": "icon128.png" },
   "permissions": ["tabs", "contextMenus", "http://*/", "https://*/" ],
