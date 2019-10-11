@@ -74,7 +74,10 @@ function find_date(in_str)
       var year_str = m[3];
       var month = monthname_to_int[month_str.slice(0, 3).toLowerCase()];
       var day= parseInt(day_str);
-      var year = parseInt(year_str);
+      var year = new Date().getFullYear(); // Default
+      if (year_str){
+         year = parseInt(year_str);
+      }
 
       if (hours == -1)
       {
