@@ -19,6 +19,33 @@ function SendToCalendarOuter(data, tab) {
     });
 }
 
+function find_date(in_str)
+{
+    // Check if the selected text contains some dates
+    // For now, only use the first one found
+    // Format 1 - Saturday, October 12th, 2019 -- super dumb, ignore day name, also ignore st, rd, th
+    var re_month_names = '((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Sept|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?))';	// Month 1
+    var re_match_any = '.*?';	// Non-greedy match on filler
+    var re_two_digit_day = '((?:(?:[0-2]?\\d{1})|(?:[3][01]{1})))(?![\\d])';	// Day 1
+    var re_four_digit_year = '((?:(?:[1]{1}\\d{1}\\d{1}\\d{1})|(?:[2]{1}\\d{3})))(?![\\d])';	// Year 1
+    var monthname_to_int = {"jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "jun": 5, "jul": 6, "aug": 7, "sep": 8, "oct": 9, "nov": 10, "dec": 11};  // month names to Javascript date month offsets
+
+    // TODO move this to global
+    var r_monthname_day_year = new RegExp(re_month_names + re_match_any + re_two_digit_day + re_match_any + re_four_digit_year, ["i"]);
+    var m = r_monthname_day_year.exec(in_str);
+    if (m != null)
+    {
+      var month_str = m[1];
+      var day_str = m[2];
+      var year_str = m[3];
+      var month = monthname_to_int[month_str.slice(0, 3).toLowerCase()];
+      var day= parseInt(day_str);
+      var year = parseInt(year_str);
+      return new Date(year, month, day);
+    }
+    return null;
+}
+
 function SendToCalendar(selection, tab) {
 
     // Max URI length is 2000 chars, but let's keep under 1600
@@ -40,6 +67,30 @@ function SendToCalendar(selection, tab) {
         // Location goes to location
         url += "&location=" + TrimURITo(address[0], maxLength - url.length);
     }
+
+    // Check if the selected text contains some dates
+    // For now, only use the first one found
+    var start_date = find_date(selection);
+    if (start_date) {
+        var one_hour = 1 * 60 * 60 * 1000; // Number of milliseconds per hour
+        var end_date = new Date(start_date);
+        var date_str = start_date.toISOString();
+        date_str = date_str.replace('-', '').replace('-', '').replace('-', '');  // this is so stupid, regex not working for me :-(
+        date_str = date_str.replace(':', '').replace(':', '').replace('.', '');  // this is so stupid, regex not working for me :-(
+        date_str = date_str.replace('000Z', 'Z');
+
+        url +=  "&dates=" + date_str;  // start date/time
+
+        end_date.setTime(end_date.getTime() + one_hour);
+        date_str = end_date.toISOString();
+        date_str = date_str.replace('-', '').replace('-', '').replace('-', '');  // this is so stupid, regex not working for me :-(
+        date_str = date_str.replace(':', '').replace(':', '').replace('.', '');  // this is so stupid, regex not working for me :-(
+        date_str = date_str.replace('000Z', 'Z');
+        url += "%2F" + date_str;  // end date/time
+    }
+    //console.log(JSON.stringify({ x: 5, y: 6 }));  // does not do anything in Chrome
+    // url += JSON.stringify({ x: 5, y: 6 });  // debug printf logging
+
 
     // URL goes to start of details (event description)
     url += "&details=" + TrimURITo(tab.url + "\n\n", maxLength - url.length);  // Event description/details
