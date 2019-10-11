@@ -34,10 +34,10 @@ const re_time = '((?:(?:[0-1][0-9])|(?:[2][0-3])|(?:[0-9])):(?:[0-5][0-9])(?::[0
 const re_time_ampm = '(?:\\s?(:am|AM|pm|PM)?)';  // optional am/pm
 const r_time = new RegExp(re_time + re_time_ampm, ["i"]);
 
-function find_date(in_str)
+function find_date(in_str, default_year, default_month, default_day)
 {
     var result_date=null;
-    //chrome.extension.getBackgroundPage().console.log(in_str);
+    chrome.extension.getBackgroundPage().console.log(in_str);
 
     // check out https://txt2re.com/ for quick aid in crafting regex, recommend hand tuning afterwards
 
@@ -75,7 +75,7 @@ function find_date(in_str)
       var year_str = m[3];
       var month = monthname_to_int[month_str.slice(0, 3).toLowerCase()];
       var day= parseInt(day_str);
-      var year = new Date().getFullYear(); // Default
+      var year = default_year;
       if (year_str){
          year = parseInt(year_str);
       }
@@ -88,7 +88,88 @@ function find_date(in_str)
       // Now wipe out the captured time text from the selection and search/match again for end time
       result_date = new Date(year, month, day, hours, mins);
     }
+    if (hours != -1 && result_date === null)
+    {
+      result_date = new Date(default_year, default_month, default_day, hours, mins);
+    }
     return result_date;
+}
+
+function find_dates(in_str)
+{
+    var end_date=null;
+    var modified_in_str=in_str;
+
+    // almost a copy of find_date()
+    var result_date=null;
+    //chrome.extension.getBackgroundPage().console.log(in_str);
+
+    // check out https://txt2re.com/ for quick aid in crafting regex, recommend hand tuning afterwards
+
+    // Check if the selected text contains some dates
+    // For now, only use the first one found
+    var hours = -1;
+    var m = r_time.exec(in_str);
+    if (m != null)
+    {
+      var time_str = m[1];
+      var ampm_str = m[2];
+      var time = time_str.split(':', 2)  // only look at and hours:mins -- ignore secs, etc.
+      var hours_str = time[0];
+      var mins_str = time[1];
+      hours = parseInt(hours_str);
+      var mins = parseInt(mins_str);
+      // if hours_str[0] == '0' then its probably 24 hours -- for now do nothing
+      if (ampm_str)
+      {
+          if (ampm_str.toLowerCase() == 'pm')
+          {
+              hours = hours + 12;  // convert to 24 hour format
+          }
+          // else assume am
+      }
+      //else  // assume 24 hour format
+      // Now wipe out the captured time text from the selection and search/match again for end time
+      modified_in_str = modified_in_str.replace(m[0], '')  // remove time, and hope we can locate the date
+    }
+
+    m = r_monthname_day_year.exec(in_str);
+    if (m != null)
+    {
+      var month_str = m[1];
+      var day_str = m[2];
+      var year_str = m[3];
+      var month = monthname_to_int[month_str.slice(0, 3).toLowerCase()];
+      var day= parseInt(day_str);
+      var year = new Date().getFullYear(); // Default
+      if (year_str){
+         year = parseInt(year_str);
+      }
+
+      if (hours == -1)
+      {
+          hours = 0;
+          mins = 0;
+      }
+      // Now wipe out the captured time text from the selection and search/match again for end time
+      result_date = new Date(year, month, day, hours, mins);
+      modified_in_str = modified_in_str.replace(m[0], '')  // remove date
+    }
+
+    if (result_date)
+    {
+        end_date = find_date(modified_in_str, result_date.getFullYear(), result_date.getMonth(), result_date.getDate());
+    }
+    if (result_date && end_date === null)
+    {
+        const one_hour = 1 * 60 * 60 * 1000; // Number of milliseconds per hour
+        end_date = new Date(result_date);
+        end_date.setTime(end_date.getTime() + one_hour);
+    }
+    chrome.extension.getBackgroundPage().console.log(result_date);
+    chrome.extension.getBackgroundPage().console.log(end_date);
+
+    return [result_date, end_date];
 }
 
 function SendToCalendar(selection, tab) {
@@ -115,10 +196,10 @@ function SendToCalendar(selection, tab) {
 
     // Check if the selected text contains some dates
     // For now, only use the first one found
-    var start_date = find_date(selection);
+    var dates = find_dates(selection);
+    var start_date = dates[0];
+    var end_date = dates[1];
     if (start_date) {
-        var one_hour = 1 * 60 * 60 * 1000; // Number of milliseconds per hour
-        var end_date = new Date(start_date);
         var date_str = start_date.toISOString();
         date_str = date_str.replace('-', '').replace('-', '').replace('-', '');  // this is so stupid, regex not working for me :-(
         date_str = date_str.replace(':', '').replace(':', '').replace('.', '');  // this is so stupid, regex not working for me :-(
@@ -126,7 +207,6 @@ function SendToCalendar(selection, tab) {
 
         url +=  "&dates=" + date_str;  // start date/time
 
-        end_date.setTime(end_date.getTime() + one_hour);
         date_str = end_date.toISOString();
         date_str = date_str.replace('-', '').replace('-', '').replace('-', '');  // this is so stupid, regex not working for me :-(
         date_str = date_str.replace(':', '').replace(':', '').replace('.', '');  // this is so stupid, regex not working for me :-(
