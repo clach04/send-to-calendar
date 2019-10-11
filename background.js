@@ -1,5 +1,5 @@
 // Create the context menu
-var cmSendToCalendar = chrome.contextMenus.create({ "title": "Send To Calendar", "contexts": ["all"], "onclick": SendToCalendarOuter });
+var cmSendToCalendar = chrome.contextMenus.create({ "title": "WIP - Send To Calendar", "contexts": ["all"], "onclick": SendToCalendarOuter });
 
 // Do all the things
 function SendToCalendarOuter(data, tab) {
