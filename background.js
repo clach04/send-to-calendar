@@ -148,7 +148,7 @@ function find_dates(in_str)
 
       if (hours == -1)
       {
-          hours = 0;
+          hours = 9;  // TODO pick a better default start time?
           mins = 0;
       }
       // Now wipe out the captured time text from the selection and search/match again for end time
