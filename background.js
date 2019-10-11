@@ -36,6 +36,8 @@ const r_time = new RegExp(re_time + re_time_ampm, ["i"]);
 
 function find_date(in_str)
 {
+    var result_date=null;
+
     // check out https://txt2re.com/ for quick aid in crafting regex, recommend hand tuning afterwards
 
     // Check if the selected text contains some dates
@@ -73,15 +75,16 @@ function find_date(in_str)
       var month = monthname_to_int[month_str.slice(0, 3).toLowerCase()];
       var day= parseInt(day_str);
       var year = parseInt(year_str);
+
       if (hours == -1)
       {
           hours = 0;
           mins = 0;
       }
       // Now wipe out the captured time text from the selection and search/match again for end time
-      return new Date(year, month, day, hours, mins);
+      result_date = new Date(year, month, day, hours, mins);
     }
-    return null;
+    return result_date;
 }
 
 function SendToCalendar(selection, tab) {
