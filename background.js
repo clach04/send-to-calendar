@@ -41,8 +41,8 @@ function SendToCalendar(selection, tab) {
         url += "&location=" + TrimURITo(address[0], maxLength - url.length);
     }
 
-    // URL goes to star of details (event description)
-    url += "&details=" + TrimURITo(tab.url + "\n\n", maxLength - url.length);
+    // URL goes to start of details (event description)
+    url += "&details=" + TrimURITo(tab.url + "\n\n", maxLength - url.length);  // Event description/details
 
     // Selection goes to end of details, and to ctext (google calendar quick add),
     // (trim to half of the available length cause its twice in the URI)
@@ -51,7 +51,8 @@ function SendToCalendar(selection, tab) {
     // but can also include other info.
     var title = TrimURITo(tab.title + "\n", maxLength - url.length);
     var selection = TrimURITo(selection, (maxLength - url.length)/2 - title.length);
-    url += selection + "&text=" + title + selection;
+    url += selection + "&text=" + title + selection;  // Event title
+
 	
     // Open the created url in a new tab
 	chrome.tabs.create({ "url": url}, function (tab) {});
