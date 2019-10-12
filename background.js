@@ -47,7 +47,12 @@ function find_date(in_str, default_year, default_month, default_day)
 
     // Check if the selected text contains some dates
     // For now, only use the first one found
+    var year = default_year;
+    var month = default_month;
+    var day = default_day;
+
     var hours = -1;
+    var mins = 0;
     var m = r_time.exec(in_str);
     if (m != null)
     {
@@ -56,8 +61,9 @@ function find_date(in_str, default_year, default_month, default_day)
       var time = time_str.split(':', 2)  // only look at and hours:mins -- ignore secs, etc.
       var hours_str = time[0];
       var mins_str = time[1];
+
       hours = parseInt(hours_str);
-      var mins = parseInt(mins_str);
+      mins = parseInt(mins_str);
       // if hours_str[0] == '0' then its probably 24 hours -- for now do nothing
       // if hours_str[0] != '0', and hours <=8 consider treating as a pm (even) if no specifier
       if (ampm_str)
@@ -79,9 +85,9 @@ function find_date(in_str, default_year, default_month, default_day)
       var month_str = m[1];
       var day_str = m[2];
       var year_str = m[3];
-      var month = monthname_to_int[month_str.slice(0, 3).toLowerCase()];
-      var day= parseInt(day_str);
-      var year = default_year;
+
+      month = monthname_to_int[month_str.slice(0, 3).toLowerCase()];
+      day = parseInt(day_str);
       if (year_str){
          year = parseInt(year_str);
       }
@@ -92,12 +98,8 @@ function find_date(in_str, default_year, default_month, default_day)
           mins = 0;
       }
       // Now wipe out the captured time text from the selection and search/match again for end time
-      result_date = new Date(year, month, day, hours, mins);
     }
-    if (hours != -1 && result_date === null)
-    {
-      result_date = new Date(default_year, default_month, default_day, hours, mins);
-    }
+    result_date = new Date(year, month, day, hours, mins);
     return result_date;
 }
 
@@ -115,6 +117,7 @@ function find_dates(in_str)
     // Check if the selected text contains some dates
     // For now, only use the first one found
     var hours = -1;
+    var mins = 0;
     var m = r_time.exec(in_str);
     if (m != null)
     {
@@ -124,7 +127,7 @@ function find_dates(in_str)
       var hours_str = time[0];
       var mins_str = time[1];
       hours = parseInt(hours_str);
-      var mins = parseInt(mins_str);
+      mins = parseInt(mins_str);
       // if hours_str[0] == '0' then its probably 24 hours -- for now do nothing
       // if hours_str[0] != '0', and hours <=8 consider treating as a pm (even) if no specifier
       if (ampm_str)
