@@ -116,7 +116,13 @@ function find_dates(in_str)
 
     // Check if the selected text contains some dates
     // For now, only use the first one found
-    var hours = -1;
+    var now = new Date();
+    var year = now.getFullYear(); // Default
+    // TODO not sure about this as Node will create negative dates or perform day/month earlier math
+    var month = -1;  // for now -1 means not set (but not null)
+    var day = -1;
+
+    var hours = -1;  // for now -1 means not set (but not null)
     var mins = 0;
     var m = r_time.exec(in_str);
     if (m != null)
@@ -126,6 +132,7 @@ function find_dates(in_str)
       var time = time_str.split(':', 2)  // only look at and hours:mins -- ignore secs, etc.
       var hours_str = time[0];
       var mins_str = time[1];
+
       hours = parseInt(hours_str);
       mins = parseInt(mins_str);
       // if hours_str[0] == '0' then its probably 24 hours -- for now do nothing
@@ -149,9 +156,8 @@ function find_dates(in_str)
       var month_str = m[1];
       var day_str = m[2];
       var year_str = m[3];
-      var month = monthname_to_int[month_str.slice(0, 3).toLowerCase()];
-      var day= parseInt(day_str);
-      var year = new Date().getFullYear(); // Default
+      month = monthname_to_int[month_str.slice(0, 3).toLowerCase()];
+      day= parseInt(day_str);
       if (year_str){
          year = parseInt(year_str);
       }
