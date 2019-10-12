@@ -22,7 +22,9 @@ function SendToCalendarOuter(data, tab) {
 
 // compiled regex used by find_date()
 
-// Format 1 - Saturday, October 12th, 2019 -- super dumb, ignore day name, also ignore st, rd, th
+// TODO look at using \b for word boundary in more places.
+
+// Format 1 - (American) English spelled out date; Saturday, December 28th, 2019 -- super dumb, ignore day name, also ignore st, rd, th
 const re_month_names = '((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Sept|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?))';	// Month 1
 const re_match_any = '.*?';	// Non-greedy match on filler
 const re_two_digit_day = '((?:(?:[0-2]?\\d{1})|(?:[3][01]{1})))(?![\\d])';	// Day 1
@@ -30,6 +32,8 @@ const re_four_digit_year = '((?:(?:[1]{1}\\d{1}\\d{1}\\d{1})|(?:[2]{1}\\d{3})))?
 const monthname_to_int = {"jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "jun": 5, "jul": 6, "aug": 7, "sep": 8, "oct": 9, "nov": 10, "dec": 11};  // month names to Javascript date month offsets
 const r_monthname_day_year = new RegExp(re_month_names + re_match_any + re_two_digit_day + re_match_any + re_four_digit_year, ["i"]);
 
+// Time format, hopefully handle 24 hour format and am/pm
+// TODO unittests; 6pm 6 pm 6:00 (consider treating as 6pm if missing leading 0?) 6:00pm  -- 06:00 -- treat as 6am
 const re_time = '((?:(?:[0-1][0-9])|(?:[2][0-3])|(?:[0-9])):(?:[0-5][0-9])(?::[0-5][0-9])?)';  // Hour:Minute:Sec
 const re_time_ampm = '(?:\\s?(:am|AM|pm|PM)?)';  // optional am/pm
 const r_time = new RegExp(re_time + re_time_ampm, ["i"]);
@@ -55,6 +59,7 @@ function find_date(in_str, default_year, default_month, default_day)
       hours = parseInt(hours_str);
       var mins = parseInt(mins_str);
       // if hours_str[0] == '0' then its probably 24 hours -- for now do nothing
+      // if hours_str[0] != '0', and hours <=8 consider treating as a pm (even) if no specifier
       if (ampm_str)
       {
           if (ampm_str.toLowerCase() == 'pm')
@@ -70,6 +75,7 @@ function find_date(in_str, default_year, default_month, default_day)
     m = r_monthname_day_year.exec(in_str);
     if (m != null)
     {
+      // Format 1 - (American) English spelled out date; Saturday, December 28th, 2019 -- super dumb, ignore day name, also ignore st, rd, th
       var month_str = m[1];
       var day_str = m[2];
       var year_str = m[3];
@@ -120,6 +126,7 @@ function find_dates(in_str)
       hours = parseInt(hours_str);
       var mins = parseInt(mins_str);
       // if hours_str[0] == '0' then its probably 24 hours -- for now do nothing
+      // if hours_str[0] != '0', and hours <=8 consider treating as a pm (even) if no specifier
       if (ampm_str)
       {
           if (ampm_str.toLowerCase() == 'pm')
