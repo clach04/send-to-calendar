@@ -290,7 +290,7 @@ function SendToCalendar(selection, tab) {
     // ctext is also prepended with tab.title,
     // so that Google Calendar can use it to generate the text,
     // but can also include other info.
-    var title = TrimURITo(tab.title + "\n", maxLength - url.length);
+    var title = TrimURITo(tab.title + " - ", maxLength - url.length);
     var selection = TrimURITo(selection, (maxLength - url.length)/2 - title.length);
     url += selection + "&text=" + title + selection;  // Event title
 
