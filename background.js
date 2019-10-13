@@ -24,13 +24,18 @@ function SendToCalendarOuter(data, tab) {
 
 // TODO look at using \b for word boundary in more places.
 
-// Format 1 - (American) English spelled out date; Saturday, December 28th, 2019 -- super dumb, ignore day name, also ignore st, rd, th
+// Format 1 - (American) English spelled out using words date; Saturday, December 28th, 2019 -- super dumb, ignore day name, also ignore st, rd, th
 const re_month_names = '((?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Sept|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?))';	// Month 1
 const re_match_any = '.*?';	// Non-greedy match on filler
 const re_two_digit_day = '((?:(?:[0-2]?\\d{1})|(?:[3][01]{1})))(?![\\d])';	// Day 1
 const re_four_digit_year = '((?:(?:[1]{1}\\d{1}\\d{1}\\d{1})|(?:[2]{1}\\d{3})))?(?![\\d])';	// Year 1
 const monthname_to_int = {"jan": 0, "feb": 1, "mar": 2, "apr": 3, "may": 4, "jun": 5, "jul": 6, "aug": 7, "sep": 8, "oct": 9, "nov": 10, "dec": 11};  // month names to Javascript date month offsets
 const r_monthname_day_year = new RegExp(re_month_names + re_match_any + re_two_digit_day + re_match_any + re_four_digit_year, ["i"]);
+
+// Format 2 - American format short date; 12/28/19 and 12/28/2019
+var re_slash_dash_dot = '(?:[/\\-\\.])';	// one of; /-.
+const re_four_or_two_digit_year = '((?:\\d{2})(?:\\d{2})?)(?![\\d])';	// Year 4 or 2 digits
+const r_us_digits_month_day_year = new RegExp(re_two_digit_day + re_slash_dash_dot + re_two_digit_day + re_slash_dash_dot + re_four_or_two_digit_year, ["i"]);  // FIXME remove case insensitive, not needed
 
 // Time format, hopefully handle 24 hour format and am/pm
 // TODO unittests; 6pm 6 pm 6:00 (consider treating as 6pm if missing leading 0?) 6:00pm  -- 06:00 -- treat as 6am
@@ -40,6 +45,8 @@ const r_time = new RegExp(re_time + re_time_ampm, ["i"]);
 
 function find_date(in_str, default_year, default_month, default_day)
 {
+    chrome.extension.getBackgroundPage().console.log('find_date() entry');
+
     var result_date=null;
     chrome.extension.getBackgroundPage().console.log(in_str);
 
@@ -56,6 +63,8 @@ function find_date(in_str, default_year, default_month, default_day)
     var m = r_time.exec(in_str);
     if (m != null)
     {
+      chrome.extension.getBackgroundPage().console.log('find_date() found time.....');
+      chrome.extension.getBackgroundPage().console.log('find_date() found time: ' + m[0]);
       var time_str = m[1];
       var ampm_str = m[2];
       var time = time_str.split(':', 2)  // only look at and hours:mins -- ignore secs, etc.
@@ -77,19 +86,37 @@ function find_date(in_str, default_year, default_month, default_day)
       //else  // assume 24 hour format
       // Now wipe out the captured time text from the selection and search/match again for end time
     }
+    else
+    {
+              chrome.extension.getBackgroundPage().console.log('find_date() did NOT found time.....');
+    }
 
     m = r_monthname_day_year.exec(in_str);
+    if (m === null)
+    {
+        m = r_us_digits_month_day_year.exec(in_str);
+    }
     if (m != null)
     {
-      // Format 1 - (American) English spelled out date; Saturday, December 28th, 2019 -- super dumb, ignore day name, also ignore st, rd, th
+        chrome.extension.getBackgroundPage().console.log('find_date() found date: ' + m[0]);
+      // US Date Format 1 or 2 - month, day, year
       var month_str = m[1];
       var day_str = m[2];
       var year_str = m[3];
 
       month = monthname_to_int[month_str.slice(0, 3).toLowerCase()];
+      if (month === undefined)
+      {
+        // assume only integers present,  parseInt() will happily consume without errors things like '8Oct' :-(
+        month = parseInt(month_str) - 1;
+      }
       day = parseInt(day_str);
       if (year_str){
          year = parseInt(year_str);
+          if (year < 100)
+          {
+              year += 2000;
+          }
       }
 
       if (hours == -1)
@@ -99,12 +126,17 @@ function find_date(in_str, default_year, default_month, default_day)
       }
       // Now wipe out the captured time text from the selection and search/match again for end time
     }
-    result_date = new Date(year, month, day, hours, mins);
+    if (hours != -1)
+    {
+        // definitely found something, either a time and date was defaulted or found date and time was defaulted
+        result_date = new Date(year, month, day, hours, mins);
+    }
     return result_date;
 }
 
 function find_dates(in_str)
 {
+    chrome.extension.getBackgroundPage().console.log('find_dates() entry');
     var end_date=null;
     var modified_in_str=in_str;
 
@@ -127,6 +159,7 @@ function find_dates(in_str)
     var m = r_time.exec(in_str);
     if (m != null)
     {
+      chrome.extension.getBackgroundPage().console.log('find_dates() found time: ' + m[0]);
       var time_str = m[1];
       var ampm_str = m[2];
       var time = time_str.split(':', 2)  // only look at and hours:mins -- ignore secs, etc.
@@ -151,23 +184,39 @@ function find_dates(in_str)
     }
 
     m = r_monthname_day_year.exec(in_str);
+    if (m === null)
+    {
+        m = r_us_digits_month_day_year.exec(in_str);
+    }
     if (m != null)
     {
+        chrome.extension.getBackgroundPage().console.log('find_dates() found date: ' + m[0]);
+      // US Date Format 1 or 2 - month, day, year
       var month_str = m[1];
       var day_str = m[2];
       var year_str = m[3];
       month = monthname_to_int[month_str.slice(0, 3).toLowerCase()];
+      if (month === undefined)
+      {
+        // assume only integers present,  parseInt() will happily consume without errors things like '8Oct' :-(
+        month = parseInt(month_str) - 1;
+      }
       day= parseInt(day_str);
       if (year_str){
          year = parseInt(year_str);
+          if (year < 100)
+          {
+              year += 2000;
+          }
       }
 
       if (hours == -1)
       {
-          hours = 9;  // TODO pick a better default start time?
+          hours = 9;  // TODO pick a better default start time? Without an explict default, there is an implicit start time of midnight
           mins = 0;
       }
       // Now wipe out the captured time text from the selection and search/match again for end time
+      chrome.extension.getBackgroundPage().console.log([year, month, day, hours, mins]);
       result_date = new Date(year, month, day, hours, mins);
       modified_in_str = modified_in_str.replace(m[0], '')  // remove date
     }
