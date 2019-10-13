@@ -244,6 +244,7 @@ function SendToCalendar(selection, tab) {
     // (This limit is not a hard limit in the code,
     // but we don't surpass it by more than a few tens of chars.)
     var maxLength = 1600;
+    maxLength = 4000;  // test, looks like Chrome and FF spport alt least 32K
 
     // Start building the URL
 	var url = "http://www.google.com/calendar/event?action=TEMPLATE";
@@ -282,19 +283,12 @@ function SendToCalendar(selection, tab) {
     // url += JSON.stringify({ x: 5, y: 6 });  // debug printf logging
 
 
-    // URL goes to start of details (event description)
-    url += "&details=" + TrimURITo(tab.url + "\n\n", maxLength - url.length);  // Event description/details
+    var title = TrimURITo(tab.title + " - " + selection, Math.min(maxLength - url.length, 200));
+    url += "&text=" + title;  // Event title
 
-    // Selection goes to end of details, and to ctext (google calendar quick add),
     // (trim to half of the available length cause its twice in the URI)
-    // ctext is also prepended with tab.title,
-    // so that Google Calendar can use it to generate the text,
-    // but can also include other info.
-    var title = TrimURITo(tab.title + " - ", maxLength - url.length);
-    var selection = TrimURITo(selection, (maxLength - url.length)/2 - title.length);
-    url += selection + "&text=" + title + selection;  // Event title
+    url += "&details=" + TrimURITo(tab.url + "\n\n" + selection, (maxLength - url.length)/2 - url.length);  // Event description/details
 
-	
     // Open the created url in a new tab
 	chrome.tabs.create({ "url": url}, function (tab) {});
 }
