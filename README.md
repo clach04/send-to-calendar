@@ -15,7 +15,7 @@ Chrome extension to send events to Google Calendar automagically from any webpag
 
 In Chrome:
 
-  * open More tools, then Extensions
+  * open More tools, then Extensions (open chrome://extensions/ )
   * then toggle Developer mode.
   * "Load unpack", select checkout directory
 
@@ -26,6 +26,15 @@ Use `chrome.extension.getBackgroundPage().console.log()` and then click on "Insp
   * https://developer.chrome.com/extensions/extension
   * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/extension/getBackgroundPage
   * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/getBackgroundPage
+
+
+## Firefox
+
+  * open about:debugging#/runtime/this-firefox
+  * "Load Temporary Add-on.."
+  * select checkout directory, and open manifest
+
+https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Your_first_WebExtension
 
 ### Porting
 
