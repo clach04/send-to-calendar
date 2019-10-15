@@ -11,6 +11,7 @@ function SendToCalendarOuter(data, tab) {
             // selection[0] contains text including line breaks
             SendToCalendar(selection[0], tab);
         } else if (data.selectionText) {
+            // https://bugs.chromium.org/p/chromium/issues/detail?id=116429
             // data.selectionText contains text without line breaks
             SendToCalendar(data.selectionText, tab);
         } else {
