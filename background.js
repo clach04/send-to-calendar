@@ -288,7 +288,11 @@ function SendToCalendar(selection, tab) {
     url += "&text=" + title;  // Event title
 
     // (trim to half of the available length cause its twice in the URI)
-    url += "&details=" + TrimURITo(tab.url + "\n\n" + selection, (maxLength - url.length)/2 - url.length);  // Event description/details
+    url += "&details=" + encodeURIComponent(tab.url) + TrimURITo("\n\n" + selection, (maxLength - url.length)/2 - url.length);  // Event description/details
+
+    // Debug - possibbly new feature/option copy URL to clipboard
+    //navigator.clipboard.writeText(url);
+
 
     // Open the created url in a new tab
 	chrome.tabs.create({ "url": url}, function (tab) {});
