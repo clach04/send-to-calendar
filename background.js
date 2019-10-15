@@ -138,6 +138,7 @@ function find_date(in_str, default_year, default_month, default_day)
 function find_dates(in_str)
 {
     chrome.extension.getBackgroundPage().console.log('find_dates() entry');
+    var now = new Date();
     var end_date=null;
     var modified_in_str=in_str;
 
@@ -149,7 +150,6 @@ function find_dates(in_str)
 
     // Check if the selected text contains some dates
     // For now, only use the first one found
-    var now = new Date();
     var year = now.getFullYear(); // Default
     // TODO not sure about this as Node will create negative dates or perform day/month earlier math
     var month = -1;  // for now -1 means not set (but not null)
@@ -220,6 +220,14 @@ function find_dates(in_str)
       chrome.extension.getBackgroundPage().console.log([year, month, day, hours, mins]);
       result_date = new Date(year, month, day, hours, mins);
       modified_in_str = modified_in_str.replace(m[0], '')  // remove date
+    }
+    else
+    {
+        if (hours != -1)
+        {
+            // found a time without date
+            result_date = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, mins);
+        }
     }
 
     if (result_date)
